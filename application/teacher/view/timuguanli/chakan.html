@@ -1,0 +1,72 @@
+<form id="form" lay-filter="form" class="layui-form model-form">
+    <input name="timu_id" type="hidden" />
+    <div class="layui-form-item">
+        <label class="layui-form-label">题目</label>
+        <div class="layui-input-block">
+            <input name="timu"  autocomplete="off" class="layui-input" placeholder="请输入题目" lay-verType="tips" lay-verify="required"
+                   style="color: #aaa" disabled required/>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">内容</label>
+        <div class="layui-input-block">
+            <input name="juti"  autocomplete="off" class="layui-input" placeholder="(空)" lay-verType="tips" lay-verify="required"
+                   style="color: #aaa" disabled required/>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">类型</label>
+        <div class="layui-input-block">
+            <select name="timuleixing" lay-verify="required" disabled style="color: #aaa" id="timuleixing">
+                {volist name="list" id="vo"}
+                <option   value="{$vo.type_id}">{$vo.type_name}</option>
+                {/volist}
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">指导老师</label>
+        <div class="layui-input-block">
+            <input name="realname"  autocomplete="off" class="layui-input" placeholder="请输入题目" lay-verType="tips" lay-verify="required"
+                   style="color: #aaa" disabled required/>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">选题人数</label>
+        <div class="layui-input-block">
+            <input name="xuantiqingkuang"  autocomplete="off" class="layui-input" placeholder="请输入题目" lay-verType="tips" lay-verify="required"
+                   style="color: #aaa" disabled required/>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">学生姓名</label>
+        <div class="layui-input-block">
+            <input name="xuantiren"  autocomplete="off" class="layui-input" placeholder="(暂无学生选)" lay-verType="tips" lay-verify="required"
+                   style="color: #aaa" disabled required/>
+        </div>
+    </div>
+
+    <div class="layui-form-item text-right">
+        <button class="layui-btn layui-btn-primary" type="button" ew-event="closePageDialog">确定</button>
+    </div>
+
+</form>
+
+<script>
+    layui.use(['layer', 'form', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var admin = layui.admin;
+
+        var data = admin.getLayerData('#form').data;  // 列表页面传递的数据
+        // 回显数据
+        form.val('form', data);
+
+    });
+</script>

@@ -1,0 +1,99 @@
+{include file="comm/header"}
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body table-tool-mini full-table">
+            <div class="layui-form toolbar">
+                <div class="layui-form-item">
+
+                    <div class="layui-inline">
+                        <input class="layui-input" name="key" placeholder="请输入姓名/关键字" autocomplete="off">
+                    </div>
+                    <div class="layui-inline">
+                        <select name="type" id="type">
+                            <option value="">请选择分类</option>
+                            {volist name="list" id="vo"}
+                            <option value="{$vo.type_id}">{$vo.type_name}</option>
+                            {/volist}
+                        </select>
+
+                    </div>
+                    <div class="layui-inline">
+                        <button class="layui-btn icon-btn" lay-filter="searchUser" lay-submit>
+                            <i class="layui-icon layui-icon-search"></i>搜索
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <table id="tableUser" lay-filter="tableUser"></table>
+        </div>
+    </div>
+</div>
+
+{include file="comm/footer"}
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var admin = layui.admin;
+
+        // 渲染表格
+        var insTb = table.render({
+            elem: '#tableUser',
+            url: '{:url("gettimu")}',
+            page: true,
+            even: true,
+            limits: [10, 20, 50, 100],
+            limit: 10,
+            cols: [[
+                {type: 'checkbox'},
+                {align: 'center', field: 'timu', title: '题目',style:'cursor: pointer;',event:'chakan'},
+                {align: 'center', field: 'type_name', title: '题目类型'},
+                {align: 'center', field: 'realname', title: '老师姓名'},
+                {align: 'center', field: 'xuantiqingkuang', sort: true, title: '选题人数'},
+                {align: 'center', field: 'xuantiren',  title: '学生姓名'},
+            ]]
+        });
+
+        // 搜索
+        form.on('submit(searchUser)', function (data) {
+            insTb.reload({where: data.field}, 'data');
+        });
+
+        // 工具条点击事件
+        table.on('tool(tableUser)', function (obj) {
+            var data = obj.data;
+            var layEvent = obj.event;
+
+            (layEvent === 'chakan')
+            {
+                // alert("123");
+                doEdit1(data);
+            }
+        });
+
+        function doEdit1(data) {
+            //添加id的目的为防止用户编辑时显示用户密码
+            var layIndex = admin.open({
+                title: (data ? '查看' : '添加') + '题目',
+                url: "{:url('chakan')}",
+                data: {data: data},     // 传递数据到表单页面
+                end: function () {
+                    if (admin.getLayerData(layIndex, 'formOk')) {  // 判断表单操作成功标识
+                        insTb.reload();  // 成功刷新表格
+                        insTb2.reload();
+                    }
+                },
+                success: function (layero, dIndex) {
+                    // 弹窗超出范围不出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+    });
+</script>

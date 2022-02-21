@@ -1,0 +1,268 @@
+{include file="comm/header"}
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body table-tool-mini full-table">
+            <div class="layui-form toolbar">
+                <div class="layui-form-item">
+<!--                    <div class="layui-inline">-->
+<!--                        <input class="layui-input" name="xingming" placeholder="请输入姓名" autocomplete="off">-->
+<!--                    </div>-->
+                    <div class="layui-inline">
+                        <input class="layui-input" name="key" placeholder="请输入姓名/关键字" autocomplete="off">
+                    </div>
+                    <div class="layui-inline">
+                        <select name="type" id="type">
+                            <option value="">请选择分类</option>
+                            {volist name="list" id="vo"}
+                            <option value="{$vo.type_id}">{$vo.type_name}</option>
+                            {/volist}
+                        </select>
+                    </div>
+                    <div class="layui-inline">
+                        <select name="shenhe" id="shenhe">
+                            <option value="">请选择审核状态</option>
+                            <option value="同意">同意</option>
+                            <option value="拒绝">拒绝</option>
+                            <option value="等待审核">等待审核</option>
+                        </select>
+                    </div>
+                    <div class="layui-inline">
+                        <button class="layui-btn icon-btn" lay-filter="searchUser" lay-submit>
+                            <i class="layui-icon layui-icon-search"></i>搜索
+                        </button>
+                        <button id="tongyiUser" class="layui-btn icon-btn"><i class="layui-icon layui-icon-add-1"></i>同意</button>
+                        <button id="jujueUser" class="layui-btn icon-btn"><i class="layui-icon layui-icon-subtraction"></i>拒绝</button>
+
+                    </div>
+                </div>
+            </div>
+
+            <table id="tableUser" lay-filter="tableUser"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBarUser">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">同意</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">拒绝</a>
+<!--    <a class="layui-btn layui-btn-xs" lay-event="reset">重置密码</a>-->
+</script>
+<!-- 表格状态列 -->
+<script type="text/html" id="tableStatusUser">
+    <input type="checkbox" lay-filter="ckStatusUser" value="{{d.user_id}}" lay-skin="switch"
+           lay-text="正常|锁定" {{d.status==1?'checked':''}}/>
+</script>
+
+{include file="comm/footer"}
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var admin = layui.admin;
+
+        // 渲染表格
+        var insTb = table.render({
+            elem: '#tableUser',
+            url: '{:url("gettimu")}',
+            page: true,
+            even: true,
+            limits: [10, 20, 50, 100],
+            limit: 10,
+            cols: [[
+                {type: 'checkbox'},
+               // {type: 'numbers'},
+                {align: 'center', width:100 ,field: 'timu', title: '题目',style:'cursor: pointer;',event:'chakan'},
+                {align: 'center',width:100 ,field: 'type_name', title: '题目类型'},
+                {align: 'center', field: 'realname', title: '老师姓名'},
+                {align: 'center', field: 'xuantiqingkuang', sort: true, title: '选题人数'},
+                {align: 'center', field: 'chutitime', sort: true, title: '出题时间'},
+                {align: 'center', field: 'shenhezhuangtai', title: '审核状态'},
+                {align: 'center', field: 'xuantiren',  title: '学生姓名'},
+                {align: 'center', toolbar: '#tableBarUser', title: '操作', minWidth: 120}
+            ]]
+        });
+
+        // 搜索
+        form.on('submit(searchUser)', function (data) {
+            insTb.reload({where: data.field}, 'data');
+        });
+
+        // 批量
+        $('#tongyiUser').click(function () {
+            var checkRows = table.checkStatus('tableUser');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要同意的数据', {icon: 2});
+                return;
+            }
+            var ids = checkRows.data.map(function (d) {
+                return d.timu_id;
+            });
+           // console.log(ids);
+            doDel(ids);
+        });
+
+        // 批量
+        $('#jujueUser').click(function () {
+            var checkRows = table.checkStatus('tableUser');
+            if (checkRows.data.length === 0) {
+                layer.msg('请选择要拒绝的数据', {icon: 2});
+                return;
+            }
+            var ids = checkRows.data.map(function (d) {
+                return d.timu_id;
+            });
+            console.log(ids);
+            doDel1(ids);
+        });
+
+        // 工具条点击事件
+        table.on('tool(tableUser)', function (obj) {
+            var data = obj.data;
+            var layEvent = obj.event;
+            if (layEvent === 'edit') { // 修改
+                layer.confirm('确定要同意'+""+'吗？', {
+                    skin: 'layui-layer-admin',
+                    shade: .1,
+                    icon:3
+                }, function (index) {
+                    layer.close(index);
+                    layer.load(2);
+                    $.post("{:url('tongyi')}", {
+                        timu_id: data.timu_id
+                    }, function (res) {
+                        layer.closeAll('loading');
+                        if (res.code === 1) {
+                            layer.msg(res.msg, {icon: 1});
+                            insTb.reload({}, 'data');
+                        } else {
+                            layer.msg(res.msg, {icon: 2});
+                        }
+                    }, 'json');
+                });
+            }
+            else if (layEvent === 'del') { // 删除
+                jujueyuanyin(data);
+            }
+            else if(layEvent === 'chakan')
+            {
+                doEdit1(data);
+            }
+        });
+
+        function doEdit1(data) {
+            //添加id的目的为防止用户编辑时显示用户密码
+            var layIndex = admin.open({
+                title: (data ? '查看' : '添加') + '题目',
+                url: "{:url('chakan')}",
+                data: {data: data},     // 传递数据到表单页面
+                end: function () {
+                    if (admin.getLayerData(layIndex, 'formOk')) {  // 判断表单操作成功标识
+                        insTb.reload();  // 成功刷新表格
+                        insTb2.reload();
+                    }
+                },
+                success: function (layero, dIndex) {
+                    // 弹窗超出范围不出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+
+        function jujueyuanyin(data) {
+            //添加id的目的为防止用户编辑时显示用户密码
+            var layIndex = admin.open({
+                title: (data ? '拒绝' : ''),
+                url: "{:url('jujueyuanyin')}",
+                data: {data: data},     // 传递数据到表单页面
+                end: function () {
+                    if (admin.getLayerData(layIndex, 'formOk')) {  // 判断表单操作成功标识
+                        insTb.reload();  // 成功刷新表格
+                    }
+                },
+                success: function (layero, dIndex) {
+                    // 弹窗超出范围不出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+
+        // 同意
+        function doDel(user_id) {
+            layer.confirm('确定要同意这些数据吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1,
+                icon:3
+            }, function (index) {
+
+                layer.close(index);
+                layer.load(2);
+                $.post("{:url('ptongyi')}", {
+                    timu_id: user_id
+                }, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code === 1) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({}, 'data');
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+                return false;
+            });
+        }
+        // 拒绝
+        function doDel1(user_id) {
+            layer.open({
+                type: 2,
+                title: '请输入拒绝原因',
+                area: ['300px', '200px'],
+                content: 'pjujueyuanyin.html',//弹出层显示的页面存在跟此index.html同一级的edit.html中
+                //maxmin: true,//开启弹出框最大最小化按钮
+                btn: ['确定'],//添加确定按钮
+                yes: function (index) { //确定按钮对应回调函数
+                    layer.close(index);
+                    //提交修改数据
+                    var body = layer.getChildFrame('body', index);
+                    var dataTemp = {};
+                    body.find('input').serializeArray().forEach(function (item) {
+                        dataTemp[item.name] = item.value;//根据表单元素的name属性来获取数据
+                            $.ajax({
+                                type: 'post',
+                                url: "{:url('pjujue')}",
+                                data: {
+                                    "timu_id": user_id,
+                                    "jujueyuanyin": dataTemp[item.name],
+                                },
+                                dataType: 'json',
+                                beforeSend: function () {
+                                    loading = layer.load(1, {
+                                        shade: [0.1, '#fff'] //0.1透明度的白色背景
+                                    });
+                                },
+                                success: function (res) {
+                                    layer.close(loading);
+
+                                    if (res.code === 1) {
+                                        layer.msg(res.msg, {icon: 1});
+                                        insTb.reload({}, 'data');
+                                    } else {
+                                        layer.msg(res.msg, {icon: 2});
+                                    }
+                                    //location.replace("xuantiguanli.html");
+                                    return false;
+                                }
+                            });
+                    });
+                }
+            })
+        }
+
+    });
+</script>

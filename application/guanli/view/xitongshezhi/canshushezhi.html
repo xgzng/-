@@ -1,0 +1,91 @@
+{include file="comm/header"}
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+        <div class="layui-card-body">
+                <form class="layui-form layui-row" lay-filter="form">
+            <div class="layui-form">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">选课时间</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="time" class="layui-input" id="test5" placeholder="yyyy-MM-dd HH:mm:ss">
+                        </div>
+                        <div class="layui-form-mid">---</div>
+                        <div class="layui-input-inline">
+                            <input type="text" name="jieshutime" class="layui-input" id="test6" placeholder="yyyy-MM-dd HH:mm:ss">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-required">每老师指导人数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="renshu" placeholder="" lay-verify="required"
+                           class="layui-input">
+                </div>
+            </div>
+<!--            <div class="layui-form-item">-->
+<!--                 <label class="layui-form-label layui-form-required">每学生选题数</label>-->
+<!--                 <div class="layui-input-inline">-->
+<!--                     <input type="text" name="timushu" placeholder="" lay-verify="required"-->
+<!--                           class="layui-input">-->
+<!--                 </div>-->
+<!--            </div>-->
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-filter="save" lay-submit>更新参数
+                    </button>
+                </div>
+            </div>
+                </form>
+        </div>
+        </div>
+    </div>
+</div>
+
+{include file="comm/footer"}
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'admin','laydate'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var admin = layui.admin;
+
+        var laydate = layui.laydate;
+
+        //日期时间选择器
+        laydate.render({
+            elem: '#test5'
+            ,type: 'datetime'
+            ,trigger: 'click'
+            ,format:'yyyy-MM-dd HH:mm'
+        });
+
+        laydate.render({
+            elem: '#test6'
+            ,type: 'datetime'
+            ,trigger: 'click'
+            ,format:'yyyy-MM-dd HH:mm'
+        });
+
+        form.val('form', {$data});
+        /* 监听表单提交 */
+        form.on('submit(save)', function (data) {
+            layer.load(2);
+            $.post("{:url('canshushezhi')}", data.field, function (res) {
+                layer.closeAll('loading');
+                if (res.code === 1) {
+                    layer.msg(res.msg, {icon: 1});
+                } else {
+                    layer.msg(res.msg, {icon: 2});
+                }
+            }, 'json');
+            return false;
+        });
+
+
+    });
+</script>

@@ -1,0 +1,196 @@
+{include file="comm/header"}
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body table-tool-mini full-table">
+            <div class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                    </div>
+                    <div class="layui-inline">
+                        <button id="addUser" class="layui-btn icon-btn"><i class="layui-icon layui-icon-add-1"></i>添加</button>
+                    </div>
+                </div>
+            </div>
+            <table id="tableUser" lay-filter="tableUser"></table>
+        </div>
+    </div>
+    <div class="layui-card">
+        <div class="layui-card-body table-tool-mini full-table">
+           <div>学生选题情况</div>
+            <table id="tableUser2" lay-filter="tableUser2"></table>
+        </div>
+    </div>
+
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBarUser">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="tongyi">同意</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="jujue">拒绝</a>
+</script>
+<script type="text/html" id="tableBarUser2">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+{include file="comm/footer"}
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var admin = layui.admin;
+
+        // 渲染表格
+        var insTb = table.render({
+            elem: '#tableUser',
+            url: '{:url("getwodetimu")}',
+            page: true,
+            even: true,
+            limits: [10, 20, 50, 100],
+            limit: 10,
+            cols: [[
+                //{type: 'checkbox'},
+                // {type: 'numbers'},
+                {align: 'center', field: 'timu', title: '题目'},
+                {align: 'center', field: 'type_name', title: '题目类型'},
+                {align: 'center', field: 'xuantiqingkuang', sort: true, title: '选题人数'},
+                {align: 'center', field: 'shenhezhuangtai',  title: '管理员审核'},
+                {align: 'center', field: 'jujueyuanyin',   title: '拒绝原因'},
+                {align: 'center', toolbar: '#tableBarUser2', title: '操作', minWidth: 200}
+            ]]
+        });
+        // 渲染表格
+        var insTb2 = table.render({
+            elem: '#tableUser2',
+            url: '{:url("getwodetimu2")}',
+            page: true,
+            even: true,
+            limits: [10, 20, 50, 100],
+            limit: 10,
+            cols: [[
+                // {type: 'numbers'},
+                {align: 'center', field: 'timu', title: '题目'},
+                {align: 'center', field: 'type_name', title: '类型'},
+                {align: 'center', field: 'realname',  title: '已选学生'},
+                {align: 'center', field: 'shenhezhuangtai',   title: '审核学生'},
+                {align: 'center', toolbar: '#tableBarUser', title: '操作', minWidth: 200}
+            ]]
+        });
+
+        // 添加
+        $('#addUser').click(function () {
+            doEdit();
+        });
+
+        // 工具条点击事件
+        table.on('tool(tableUser)', function (obj) {
+            var data = obj.data;
+            var layEvent = obj.event;
+            if (layEvent === 'edit') { // 修改
+                doEdit(data);
+            } else if (layEvent === 'del') { // 删除
+                doDel(data.timu_id, data.timu);
+            }
+        });
+
+        // 工具条点击事件
+        table.on('tool(tableUser2)', function (obj) {
+            var data = obj.data;
+            var layEvent = obj.event;
+            if (layEvent === 'tongyi') { // 修改
+                layer.confirm('确定要同意吗？', {
+                    skin: 'layui-layer-admin',
+                    shade: .1,
+                    icon:3
+                }, function (index) {
+                    layer.close(index);
+                    layer.load(2);
+                    $.post("{:url('tongyi')}", {
+                        timu_id: data.timu_id,student:data.student
+                        ,xuanti_id:data.xuanti_id
+                    }, function (res) {
+                        layer.closeAll('loading');
+                        if (res.code === 1) {
+                            layer.msg(res.msg, {icon: 1});
+                            insTb2.reload({}, 'data');
+                            insTb.reload();
+                        } else {
+                            layer.msg(res.msg, {icon: 2});
+                        }
+                    }, 'json');
+                });
+            } else if (layEvent === 'jujue') { // 删除
+                layer.confirm('确定要拒绝吗？', {
+                    skin: 'layui-layer-admin',
+                    shade: .1,
+                    icon:3
+                }, function (index) {
+                    layer.close(index);
+                    layer.load(2);
+                    $.post("{:url('jujue')}", {
+                        timu_id: data.timu_id,student:data.student
+                        ,xuanti_id:data.xuanti_id
+                    }, function (res) {
+                        layer.closeAll('loading');
+                        if (res.code === 1) {
+                            layer.msg(res.msg, {icon: 1});
+                            insTb2.reload({}, 'data');
+                            insTb.reload();
+                        } else {
+                            layer.msg(res.msg, {icon: 2});
+                        }
+                    }, 'json');
+                });
+            }
+        });
+
+
+
+        function doEdit(data) {
+            //添加id的目的为防止用户编辑时显示用户密码
+            var layIndex = admin.open({
+                title: (data ? '修改' : '添加') + '题目',
+                url: "{:url('timu_form')}",
+                data: {data: data},     // 传递数据到表单页面
+                end: function () {
+                    if (admin.getLayerData(layIndex, 'formOk')) {  // 判断表单操作成功标识
+                        insTb.reload();  // 成功刷新表格
+                        insTb2.reload();
+                    }
+                },
+                success: function (layero, dIndex) {
+                    // 弹窗超出范围不出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+        // 删除
+        function doDel(timu_id,timu) {
+            layer.confirm('确定要删除数据'+timu+'吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1,
+                icon:3
+            }, function (index) {
+                layer.close(index);
+                layer.load(2);
+                $.post("{:url('timuDel')}", {
+                    timu_id: timu_id
+                }, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code === 1) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({}, 'data');
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+
+    });
+</script>

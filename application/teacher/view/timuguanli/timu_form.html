@@ -1,0 +1,72 @@
+<form id="form" lay-filter="form" class="layui-form model-form">
+    <input name="timu_id" type="hidden" />
+    <div class="layui-form-item">
+        <label class="layui-form-label layui-form-required">题目</label>
+        <div class="layui-input-block">
+            <input name="timu" autocomplete="off" class="layui-input" placeholder="请输入题目" lay-verType="tips" lay-verify="required"
+                   required/>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">内容</label>
+        <div class="layui-input-block">
+            <input name="juti" autocomplete="off" class="layui-input" placeholder="请输入内容(可为空)" lay-verType="tips"
+                />
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">类型</label>
+        <div class="layui-input-block">
+            <select name="timuleixing" lay-verify="required"  id="timuleixing">
+                {volist name="list" id="vo"}
+                <option value="{$vo.type_id}">{$vo.type_name}</option>
+                {/volist}
+            </select>
+        </div>
+    </div>
+    <input name="zhidaolaoshi" type="hidden">
+    <input name="xuantiqingkuang" type="hidden">
+    <input name="shenhezhuangtai"type="hidden">
+    <input name="jujueyuanyin" type="hidden">
+
+    <div class="layui-form-item text-right">
+        <button class="layui-btn layui-btn-primary" type="button" ew-event="closePageDialog">取消</button>
+        <button class="layui-btn" lay-filter="save" lay-submit>保存</button>
+    </div>
+
+</form>
+
+<script>
+    layui.use(['layer', 'form', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var admin = layui.admin;
+
+        var data = admin.getLayerData('#form').data;  // 列表页面传递的数据
+        // 回显数据
+        form.val('form', data);
+        // 表单提交事件
+        form.on('submit(save)', function (data) {
+
+            console.log(data.field);
+            layer.load(2);
+            $.post("{:url('timu_form')}", data.field, function (res) {
+
+                layer.closeAll('loading');
+                if (res.code == 1) {
+                    layer.msg(res.msg, {icon: 1});
+                    admin.putLayerData('formOk', true, '#form');  // 设置操作成功的标识
+                    admin.closeDialog('#form');  // 关闭页面层弹窗
+                } else {
+                    layer.msg(res.msg, {icon: 2});
+                    admin.closeDialog('#form');  // 关闭页面层弹窗
+                }
+            }, 'json');
+            return false;
+        });
+
+    });
+</script>

@@ -1,0 +1,289 @@
+{include file="comm/header"}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <button id="addType" class="layui-btn layui-btn-sm"><i class="layui-icon layui-icon-add-1"></i>添加类别
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <table id="typeTable" lay-filter="typeTable"></table>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <button id="addzhicheng" class="layui-btn layui-btn-sm"><i class="layui-icon layui-icon-add-1"></i>添加职称
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <table id="zhichengTable" lay-filter="zhichengTable"></table>
+        </div>
+    </div>
+</div>
+
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <button id="addxueli" class="layui-btn layui-btn-sm"><i class="layui-icon layui-icon-add-1"></i>添加学历
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <table id="xueliTable" lay-filter="xueliTable"></table>
+        </div>
+    </div>
+</div>
+
+
+<!-- 表格操作列 -->
+<script type="text/html" id="tableBarType">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<script type="text/html" id="tableBarType1">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit1">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del1">删除</a>
+</script>
+
+<script type="text/html" id="tableBarType2">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit2">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del2">删除</a>
+</script>
+{include file="comm/footer"}
+<script>
+    layui.use(['layer', 'form', 'table', 'util', 'admin'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        var admin = layui.admin;
+
+        /* 渲染表格 */
+        var insTb = table.render({
+            elem: '#typeTable',
+            url: '{:url("index")}', //  /admin/newstype/index
+            cols: [[
+                {type: 'numbers'},
+                {field: 'type_name', title: '题目类别名称'},
+                {title: '操作', toolbar: '#tableBarType', align: 'center', width: 200, minWidth: 200}
+            ]]
+        });
+
+        // 添加按钮点击事件
+        $('#addType').click(function () {
+            doEdit();
+        });
+
+        /* 表格工具条点击事件 */
+        table.on('tool(typeTable)', function (obj) {
+            if (obj.event === 'edit') { // 修改
+                doEdit(obj.data);
+            } else if (obj.event === 'del') { // 删除
+                doDel(obj.data.type_id, obj.data.type_name);
+            }
+        });
+
+        /* 显示表单弹窗 */
+        function doEdit(data) {
+            var layIndex = admin.open({
+                title: (data ? '修改' : '添加') + '题目类别',
+                url: "{:url('typeForm')}",
+                data: {data: data},     // 传递数据到表单页面
+                end: function () {
+                    if (admin.getLayerData(layIndex, 'formOk')) {  // 判断表单操作成功标识
+                        insTb.reload();  // 成功刷新表格
+                    }
+                },
+                success: function (layero, dIndex) {
+                    // 弹窗超出范围不出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+        /* 删除 */
+        function doDel(type_id, name) {
+            layer.confirm('确定要删除“' + name + '”吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1,
+                icon:3
+            }, function (index) {
+                layer.close(index);
+                layer.load(2);
+                $.post("{:url('typeDel')}", {
+                    type_id: type_id
+                }, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code === 1) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({}, 'data');
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+
+        /* 渲染表格 */
+        var insTb1 = table.render({
+            elem: '#zhichengTable',
+            url: '{:url("zhicheng")}', //  /admin/newstype/index
+            cols: [[
+                {type: 'numbers'},
+                {field: 'zhicheng_name', title: '职称名称'},
+                {title: '操作', toolbar: '#tableBarType1', align: 'center', width: 200, minWidth: 200}
+            ]]
+        });
+
+        // 添加按钮点击事件
+        $('#addzhicheng').click(function () {
+            doEdit1();
+        });
+
+        /* 表格工具条点击事件 */
+        table.on('tool(zhichengTable)', function (obj) {
+            if (obj.event === 'edit1') { // 修改
+                doEdit1(obj.data);
+            } else if (obj.event === 'del1') { // 删除
+                doDel1(obj.data.zhicheng_id, obj.data.zhicheng_name);
+            }
+        });
+
+        /* 显示表单弹窗 */
+        function doEdit1(data) {
+            var layIndex = admin.open({
+                title: (data ? '修改' : '添加') + '职称',
+                url: "{:url('zhichengForm')}",
+                data: {data: data},     // 传递数据到表单页面
+                end: function () {
+                    if (admin.getLayerData(layIndex, 'formOk')) {  // 判断表单操作成功标识
+                        insTb1.reload();  // 成功刷新表格
+                    }
+                },
+                success: function (layero, dIndex) {
+                    // 弹窗超出范围不出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+        /* 删除 */
+        function doDel1(type_id, name) {
+            layer.confirm('确定要删除“' + name + '”吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1,
+                icon:3
+            }, function (index) {
+                layer.close(index);
+                layer.load(2);
+                $.post("{:url('zhichengDel')}", {
+                    zhicheng_id: type_id
+                }, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code === 1) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb1.reload({}, 'data');
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+
+
+
+        /* 渲染表格 */
+        var insTb2 = table.render({
+            elem: '#xueliTable',
+            url: '{:url("xueli")}', //  /admin/newstype/index
+            cols: [[
+                {type: 'numbers'},
+                {field: 'xueli_name', title: '学历名称'},
+                {title: '操作', toolbar: '#tableBarType2', align: 'center', width: 200, minWidth: 200}
+            ]]
+        });
+
+        // 添加按钮点击事件
+        $('#addxueli').click(function () {
+            doEdit2();
+        });
+
+        /* 表格工具条点击事件 */
+        table.on('tool(xueliTable)', function (obj) {
+            if (obj.event === 'edit2') { // 修改
+                doEdit2(obj.data);
+            } else if (obj.event === 'del2') { // 删除
+                doDel2(obj.data.xueli_id, obj.data.xueli_name);
+            }
+        });
+
+        /* 显示表单弹窗 */
+        function doEdit2(data) {
+            var layIndex = admin.open({
+                title: (data ? '修改' : '添加') + '学历',
+                url: "{:url('xueliForm')}",
+                data: {data: data},     // 传递数据到表单页面
+                end: function () {
+                    if (admin.getLayerData(layIndex, 'formOk')) {  // 判断表单操作成功标识
+                        insTb2.reload();  // 成功刷新表格
+                    }
+                },
+                success: function (layero, dIndex) {
+                    // 弹窗超出范围不出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+        /* 删除 */
+        function doDel2(type_id, name) {
+            layer.confirm('确定要删除“' + name + '”吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1,
+                icon:3
+            }, function (index) {
+                layer.close(index);
+                layer.load(2);
+                $.post("{:url('xueliDel')}", {
+                    xueli_id: type_id
+                }, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code === 1) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb2.reload({}, 'data');
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'json');
+            });
+        }
+
+
+
+
+
+
+
+
+    });
+</script>
